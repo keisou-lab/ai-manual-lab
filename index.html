@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Manual Lab | ログイン</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="script.js" defer></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .container {
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .btn {
+      background-color: #4285f4;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #3367d6;
+    }
+    #user-photo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    .upload-area {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Manual Lab</h1>
+    <p>AIがあなたの取説を理解してくれる時代へ</p>
+
+    <div id="login-area">
+      <button id="google-login" class="btn">Googleでログイン</button>
+    </div>
+
+    <div id="user-info" style="display:none;">
+      <img id="user-photo" alt="User Photo" />
+      <p id="user-name"></p>
+      <button id="logout" class="btn">ログアウト</button>
+
+      <!-- ▼ ここから追加：アップロード機能 ▼ -->
+      <div class="upload-area">
+        <h3>ファイルアップロード</h3>
+        <input type="file" id="fileInput" />
+        <button id="uploadBtn" class="btn">アップロード</button>
+      </div>
+      <!-- ▲ ここまで追加 ▲ -->
+    </div>
+  </div>
+</body>
+</html>
