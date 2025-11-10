@@ -11,7 +11,7 @@ import {
 import { 
   getStorage, 
   ref, 
-  uploadBytes, 
+  uploadBytesResumable, 
   getDownloadURL 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
@@ -31,7 +31,7 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-const storage = getStorage(app); // ← Storage追加
+const storage = getStorage(app);
 
 // DOM要素取得
 const loginBtn = document.getElementById("google-login");
@@ -40,6 +40,10 @@ const loginArea = document.getElementById("login-area");
 const userInfo = document.getElementById("user-info");
 const userName = document.getElementById("user-name");
 const userPhoto = document.getElementById("user-photo");
+const uploadForm = document.getElementById("upload-form");
+const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
+const uploadStatus = document.getElementById("upload-status");
 
 // ログイン処理
 loginBtn.addEventListener("click", async () => {
@@ -60,55 +64,54 @@ logoutBtn.addEventListener("click", async () => {
   console.log("👋 ログアウトしました");
 });
 
-// ログイン状態の監視
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginArea.style.display = "none";
-    userInfo.style.display = "block";
-    userName.textContent = `${user.displayName} さん`;
-    userPhoto.src = user.photoURL;
-  } else {
-    loginArea.style.display = "block";
-    userInfo.style.display = "none";
-  }
-});
-
-// ==========================
-// ▼ ここから追加：Storage連携
-// ==========================
-
-// ファイルアップロード関数
-async function uploadFile(file) {
+// アップロード処理
+uploadBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
   if (!file) {
-    alert("ファイルを選択してください。");
+    alert("アップロードするファイルを選択してください。");
     return;
   }
 
   const user = auth.currentUser;
   if (!user) {
-    alert("ログインしてからアップロードしてください。");
+    alert("ログインしてください。");
     return;
   }
 
-  try {
-    const storageRef = ref(storage, `uploads/${user.uid}/${file.name}`);
-    await uploadBytes(storageRef, file);
+  const fileRef = ref(storage, `users/${user.uid}/${file.name}`);
+  const uploadTask = uploadBytesResumable(fileRef, file);
 
-    const url = await getDownloadURL(storageRef);
-    console.log("✅ アップロード完了:", url);
-    alert("アップロード完了！URLをコンソールに表示しました。");
-  } catch (error) {
-    console.error("❌ アップロード失敗:", error);
-    alert("アップロードに失敗しました。");
+  uploadStatus.textContent = "アップロード中...";
+
+  uploadTask.on(
+    "state_changed",
+    (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      uploadStatus.textContent = `アップロード中... ${progress.toFixed(0)}%`;
+    },
+    (error) => {
+      console.error("❌ アップロード失敗:", error);
+      uploadStatus.textContent = "アップロード失敗";
+    },
+    async () => {
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      console.log("✅ アップロード成功:", downloadURL);
+      uploadStatus.innerHTML = `✅ アップロード完了！<br><a href="${downloadURL}" target="_blank">ファイルを開く</a>`;
+    }
+  );
+});
+
+// ログイン状態の監視
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginArea.style.display = "none";
+    userInfo.style.display = "block";
+    uploadForm.style.display = "block";
+    userName.textContent = `${user.displayName} さん`;
+    userPhoto.src = user.photoURL;
+  } else {
+    loginArea.style.display = "block";
+    userInfo.style.display = "none";
+    uploadForm.style.display = "none";
   }
-}
-
-// HTMLのボタン操作に紐付け
-const uploadBtn = document.getElementById("uploadBtn");
-if (uploadBtn) {
-  uploadBtn.addEventListener("click", () => {
-    const fileInput = document.getElementById("fileInput");
-    const file = fileInput.files[0];
-    uploadFile(file);
-  });
-}
+});
